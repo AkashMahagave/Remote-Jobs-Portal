@@ -1,11 +1,10 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { 
   Search, MapPin, Briefcase, Building2, 
   ArrowRight, Globe, Layout, Building, Rocket, Users, ChevronDown, Palette
 } from "lucide-react";
-import axios from "axios";
-import { AuthContext } from "../context/AuthContext";
+import { getJobs } from "../data/staticData";
 import JobCard from "../components/JobCard";
 import CompanyLogo from "../components/CompanyLogo";
 
@@ -14,39 +13,37 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [searchData, setSearchData] = useState({ keyword: "", location: "", category: "All Categories" });
   const navigate = useNavigate();
-  const { backendUrl } = useContext(AuthContext);
 
   useEffect(() => {
     setLoading(true);
-    axios.get(`${backendUrl}/jobs?limit=100`)
-      .then(res => {
-        const targetCompanies = ["Amazon", "Google", "Microsoft", "Spotify", "Swiggy", "Tesla"];
-        const featuredJobs = [];
-        
-        // Find one job per target company, maintaining exact target order
-        targetCompanies.forEach(target => {
-          const job = (res.data.data || []).find(j => j.companyName.toLowerCase() === target.toLowerCase());
-          if (job) featuredJobs.push(job);
-        });
-        
-        // If we didn't find all 6, fill with others
-        if (featuredJobs.length < 6) {
-          const seen = new Set(featuredJobs.map(j => j.companyName.toLowerCase()));
-          for (const job of (res.data.data || [])) {
-            if (featuredJobs.length >= 6) break;
-            const comp = job.companyName.toLowerCase();
-            if (!seen.has(comp)) {
-              featuredJobs.push(job);
-              seen.add(comp);
-            }
-          }
+    // Use static data instead of API call
+    const result = getJobs({ limit: 100 });
+    const allJobs = result.data || [];
+    const targetCompanies = ["Amazon", "Google", "Microsoft", "Spotify", "Swiggy", "Tesla"];
+    const featuredJobs = [];
+    
+    // Find one job per target company, maintaining exact target order
+    targetCompanies.forEach(target => {
+      const job = allJobs.find(j => j.companyName.toLowerCase() === target.toLowerCase());
+      if (job) featuredJobs.push(job);
+    });
+    
+    // If we didn't find all 6, fill with others
+    if (featuredJobs.length < 6) {
+      const seen = new Set(featuredJobs.map(j => j.companyName.toLowerCase()));
+      for (const job of allJobs) {
+        if (featuredJobs.length >= 6) break;
+        const comp = job.companyName.toLowerCase();
+        if (!seen.has(comp)) {
+          featuredJobs.push(job);
+          seen.add(comp);
         }
-        
-        setJobs(featuredJobs.slice(0, 6));
-      })
-      .catch(err => console.error(err))
-      .finally(() => setLoading(false));
-  }, [backendUrl]);
+      }
+    }
+    
+    setJobs(featuredJobs.slice(0, 6));
+    setLoading(false);
+  }, []);
 
   const handleSearch = (e) => {
     e.preventDefault();

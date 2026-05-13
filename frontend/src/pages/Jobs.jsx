@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useContext, useCallback } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Filter, ChevronLeft, ChevronRight, Search, MapPin, Briefcase, Clock, Zap } from 'lucide-react';
-import { AuthContext } from '../context/AuthContext';
+import { getJobs } from '../data/staticData';
 import JobCard from '../components/JobCard';
 import CompanyLogo from '../components/CompanyLogo';
 
@@ -23,29 +22,25 @@ const Jobs = () => {
     type: searchParams.get('type') || 'All Types',
   });
 
-  const { backendUrl } = useContext(AuthContext);
   const [searchTimeout, setSearchTimeout] = useState(null);
 
-  const fetchJobs = useCallback(async (activeFilters, page = 1) => {
+  const fetchJobs = useCallback((activeFilters, page = 1) => {
     setLoading(true);
-    try {
-      const params = new URLSearchParams();
-      params.set('limit', JOBS_PER_PAGE);
-      params.set('page', page);
-      if (activeFilters.search) params.set('search', activeFilters.search);
-      if (activeFilters.location) params.set('location', activeFilters.location);
-      if (activeFilters.category && activeFilters.category !== 'All Categories') params.set('category', activeFilters.category);
-      if (activeFilters.workMode && activeFilters.workMode !== 'All Modes') params.set('workMode', activeFilters.workMode);
-      if (activeFilters.experience && activeFilters.experience !== 'All Experiences') params.set('experience', activeFilters.experience);
-      if (activeFilters.type && activeFilters.type !== 'All Types') params.set('type', activeFilters.type);
-      
-      const response = await axios.get(`${backendUrl}/jobs?${params.toString()}`);
-      setJobs(response.data.data || []);
-      setTotalJobs(response.data.count || 0);
-    } catch (err) {
-      console.error('Failed to fetch jobs', err);
-    } finally { setLoading(false); }
-  }, [backendUrl]);
+    // Use static data instead of API call
+    const result = getJobs({
+      search: activeFilters.search,
+      location: activeFilters.location,
+      category: activeFilters.category,
+      workMode: activeFilters.workMode,
+      experience: activeFilters.experience,
+      type: activeFilters.type,
+      page,
+      limit: JOBS_PER_PAGE
+    });
+    setJobs(result.data || []);
+    setTotalJobs(result.count || 0);
+    setLoading(false);
+  }, []);
 
   useEffect(() => {
     window.scrollTo(0, 0);

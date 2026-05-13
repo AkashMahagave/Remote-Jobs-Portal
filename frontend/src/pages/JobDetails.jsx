@@ -4,7 +4,7 @@ import {
   MapPin, Briefcase, Banknote, Calendar, ArrowLeft, 
   CheckCircle, Upload, FileText, LogIn
 } from "lucide-react";
-import axios from "axios";
+import { getJobById } from "../data/staticData";
 import { AuthContext } from "../context/AuthContext";
 import CompanyLogo from "../components/CompanyLogo";
 
@@ -16,25 +16,18 @@ const JobDetails = () => {
   const [applied, setApplied] = useState(false);
   const [error, setError] = useState("");
   
-  const { user, backendUrl } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const [resumeFile, setResumeFile] = useState(null);
   const [coverLetter, setCoverLetter] = useState("");
 
   useEffect(() => {
-    const fetchJob = async () => {
-      try {
-        const res = await axios.get(`${backendUrl}/jobs/${id}`);
-        setJob(res.data.data);
-      } catch (err) {
-        console.error("Error fetching job details", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchJob();
-  }, [id, backendUrl]);
+    // Use static data instead of API call
+    const foundJob = getJobById(id);
+    setJob(foundJob);
+    setLoading(false);
+  }, [id]);
 
   const handleApply = async (e) => {
     e.preventDefault();
@@ -46,19 +39,11 @@ const JobDetails = () => {
     setApplying(true);
     setError("");
     try {
-      const formData = new FormData();
-      if (resumeFile) formData.append("resume", resumeFile);
-      if (coverLetter) formData.append("coverLetter", coverLetter);
-
-      await axios.post(`${backendUrl}/applications/${id}/apply`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
+      // Simulate application submission (no backend)
+      await new Promise(resolve => setTimeout(resolve, 1000));
       setApplied(true);
     } catch (err) {
-      const msg = err.response?.data?.message || err.message;
-      setError(msg || "Failed to submit application.");
+      setError("Failed to submit application.");
     } finally {
       setApplying(false);
     }

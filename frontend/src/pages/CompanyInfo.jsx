@@ -1,6 +1,5 @@
-import { useState, useEffect, useContext } from "react";
-import axios from "axios";
-import { AuthContext } from "../context/AuthContext";
+import { useState, useEffect } from "react";
+import { getCompanies } from "../data/staticData";
 import { Building2, MapPin, ArrowRight, Search, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { getCompanyColor, isVerifiedCompany } from "../utils/companyLogos";
@@ -10,22 +9,13 @@ const CompanyInfo = () => {
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const { backendUrl } = useContext(AuthContext);
 
   useEffect(() => {
-    const fetchCompanies = async () => {
-      try {
-        const res = await axios.get(`${backendUrl}/companies`);
-        const allCompanies = res.data.data || [];
-        setCompanies(allCompanies);
-      } catch (err) {
-        console.error("Error fetching companies", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchCompanies();
-  }, [backendUrl]);
+    // Use static data instead of API call
+    const allCompanies = getCompanies();
+    setCompanies(allCompanies);
+    setLoading(false);
+  }, []);
 
   const filteredCompanies = companies.filter((company) => {
     return company.name.toLowerCase().includes(searchTerm.toLowerCase());

@@ -1,5 +1,4 @@
 import { useState, useEffect, useContext } from "react";
-import axios from "axios";
 import { AuthContext } from "../context/AuthContext";
 import { Link } from "react-router-dom";
 import { 
@@ -10,7 +9,7 @@ import {
 import CompanyLogo from "../components/CompanyLogo";
 
 const Dashboard = () => {
-  const { user, backendUrl } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
   const [activeTab, setActiveTab] = useState(user?.role === "employer" ? "manage-jobs" : "applied-jobs");
   
   const [myJobs, setMyJobs] = useState([]); 
@@ -32,72 +31,40 @@ const Dashboard = () => {
   const fetchDashboardData = async () => {
     if (!user) return;
     setLoading(true);
-    try {
-      if (user.role === "employer") {
-        const res = await axios.get(`${backendUrl}/jobs?limit=100`);
-        const filtered = res.data.data.filter(j => j.postedBy?._id === user._id || j.postedBy === user._id);
-        setMyJobs(filtered);
-      } else {
-        const res = await axios.get(`${backendUrl}/applications/my-applications`);
-        setMyApplications(res.data.data || []);
-      }
-    } catch (err) {
-      console.error("Dashboard fetch error", err);
-    } finally {
-      setLoading(false);
-    }
+    // No backend - dashboard shows empty state for demo
+    setMyJobs([]);
+    setMyApplications([]);
+    setLoading(false);
   };
 
   const fetchJobApplicants = async (jobId) => {
-    setLoading(true);
-    try {
-      const res = await axios.get(`${backendUrl}/applications/job/${jobId}`);
-      setSelectedJobApps({ jobId, apps: res.data.data });
-      setActiveTab("view-applicants");
-    } catch (err) {
-      alert("Failed to fetch applicants");
-    } finally {
-      setLoading(false);
-    }
+    setSelectedJobApps({ jobId, apps: [] });
+    setActiveTab("view-applicants");
   };
 
   const handlePostJob = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-    try {
-      await axios.post(`${backendUrl}/jobs`, newJob);
-      setNewJob({
-        title: "", companyName: "", location: "", salary: "",
-        type: "Full-time", workMode: "Remote", category: "IT & Software",
-        experience: "Fresher", description: "", skills: ""
-      });
-      setActiveTab("manage-jobs");
-      fetchDashboardData();
-    } catch (err) {
-      alert("Failed to post job");
-    } finally {
-      setSubmitting(false);
-    }
+    // Simulate posting (no backend)
+    await new Promise(r => setTimeout(r, 500));
+    alert("Demo mode: Job posting simulated successfully!");
+    setNewJob({
+      title: "", companyName: "", location: "", salary: "",
+      type: "Full-time", workMode: "Remote", category: "IT & Software",
+      experience: "Fresher", description: "", skills: ""
+    });
+    setActiveTab("manage-jobs");
+    setSubmitting(false);
   };
 
   const handleDeleteJob = async (id) => {
     if (!window.confirm("Are you sure?")) return;
-    try {
-      await axios.delete(`${backendUrl}/jobs/${id}`);
-      setMyJobs(myJobs.filter(j => j._id !== id));
-    } catch (err) {
-      alert("Failed to delete job");
-    }
+    setMyJobs(myJobs.filter(j => j._id !== id));
   };
 
   const handleDeleteApplication = async (appId) => {
     if (!window.confirm("Are you sure you want to withdraw this application?")) return;
-    try {
-      await axios.delete(`${backendUrl}/applications/${appId}`);
-      setMyApplications(myApplications.filter(a => a._id !== appId));
-    } catch (err) {
-      alert("Failed to delete application");
-    }
+    setMyApplications(myApplications.filter(a => a._id !== appId));
   };
 
   if (!user) return <div className="text-center py-20">Please log in.</div>;
@@ -169,7 +136,7 @@ const Dashboard = () => {
                       <p className="text-sm text-gray-500">{app.applicant?.email}</p>
                     </div>
                     <div className="flex items-center gap-4">
-                      <a href={`${backendUrl}/applications/resume/${app.resumeLink?.split('/').pop()}`} target="_blank" rel="noreferrer" className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg font-bold text-sm hover:bg-slate-800 transition">
+                      <a href="#" className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg font-bold text-sm hover:bg-slate-800 transition">
                         <FileText className="w-4 h-4" /> View Resume
                       </a>
                     </div>
@@ -248,7 +215,7 @@ const Dashboard = () => {
                         <p className="text-sm font-medium text-gray-400 flex items-center gap-1.5"><MapPin className="w-4 h-4 shrink-0" />{app.job?.location || "Remote"}</p>
                       </div>
                       <div className="mt-auto flex items-center gap-3 pt-6 border-t border-gray-100">
-                        <a href={`${backendUrl}/applications/resume/${app.resumeLink?.split('/').pop()}`} target="_blank" rel="noreferrer" className="flex-1 flex justify-center items-center gap-2 py-3 bg-gray-50 text-gray-700 rounded-xl font-bold hover:bg-gray-100 hover:text-blue-600 transition">
+                        <a href="#" className="flex-1 flex justify-center items-center gap-2 py-3 bg-gray-50 text-gray-700 rounded-xl font-bold hover:bg-gray-100 hover:text-blue-600 transition">
                           <FileText className="w-4 h-4" /> View Resume
                         </a>
                         <button onClick={() => handleDeleteApplication(app._id)} className="p-3 text-red-500 bg-red-50 hover:bg-red-500 hover:text-white rounded-xl transition shadow-sm" title="Withdraw Application">

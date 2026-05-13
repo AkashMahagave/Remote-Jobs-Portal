@@ -1,7 +1,6 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import axios from "axios";
-import { AuthContext } from "../context/AuthContext";
+import { getCompanyById } from "../data/staticData";
 import { ArrowLeft, MapPin, Globe, Briefcase, ExternalLink, Search, Sparkles } from "lucide-react";
 import CompanyLogo from "../components/CompanyLogo";
 import JobCard from "../components/JobCard";
@@ -12,21 +11,13 @@ const CompanyJobs = () => {
   const [company, setCompany] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const { backendUrl } = useContext(AuthContext);
 
   useEffect(() => {
-    const fetchCompanyData = async () => {
-      try {
-        const res = await axios.get(`${backendUrl}/companies/${id}`);
-        setCompany(res.data.data);
-      } catch (err) {
-        console.error("Error fetching company jobs", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchCompanyData();
-  }, [id, backendUrl]);
+    // Use static data instead of API call
+    const companyData = getCompanyById(id);
+    setCompany(companyData);
+    setLoading(false);
+  }, [id]);
 
   if (loading) {
     return (
