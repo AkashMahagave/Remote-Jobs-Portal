@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Remote Jobs Portal</title>
+  <script>
+    // If you accidentally use VS Code "Go Live", redirect to the actual Vite server
+    if (window.location.port !== '5173' && window.location.port !== '5174' && window.location.hostname === '127.0.0.1') {
+      window.location.replace('http://localhost:5173');
+    }
+  </script>
+  <style>
+    html,
+    body {
+      position: relative;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    #root {
+      width: 100%;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+
+</html>
