@@ -3,9 +3,10 @@
  * This file acts as the 'Global State' for our application.
  * It stores the 'user' object and provides functions like login, logout, and register 
  * to any component that needs them (like the Navbar or Dashboard).
+ * 
+ * NOTE: This version uses localStorage for demo/portfolio purposes (no backend).
  */
 import { createContext, useState, useEffect } from "react";
-import axios from "axios";
 
 // Create the Context object
 export const AuthContext = createContext();
@@ -18,92 +19,97 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null); // The logged-in user's data
   const [loading, setLoading] = useState(true); // To show a loader while checking login status
 
-  // Configure axios to always send cookies (important for security)
-  axios.defaults.withCredentials = true;
-  
-  // The address of our Backend server.
-  // In development, use the Vite proxy (/api).
-  // In production, use the configured backend URL.
-  const backendRoot = import.meta.env.VITE_BACKEND_URL || 'http://127.0.0.1:5050';
-  const backendUrl = import.meta.env.DEV ? '/api' : `${backendRoot.replace(/\/$/, '')}/api`;
-
-  // Check if a user is already logged in when the app starts
+  // Check if a user is already logged in when the app starts (from localStorage)
   useEffect(() => {
-    checkUserLoggedIn();
+    const savedUser = localStorage.getItem('rjp_user');
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch {
+        localStorage.removeItem('rjp_user');
+      }
+    }
+    setLoading(false);
   }, []);
 
   /**
-   * checkUserLoggedIn
-   * Asks the backend "Who is the current user?" based on the cookie.
-   */
-  const checkUserLoggedIn = async () => {
-    try {
-      const res = await axios.get(`${backendUrl}/auth/me`);
-      if (res.data.success) {
-        setUser(res.data.data);
-      }
-    } catch (error) {
-      setUser(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  /**
    * login
-   * Sends credentials to the backend and updates the 'user' state.
+   * Simulates login using localStorage (no backend).
    * Supports login with either email or phone number.
    */
   const login = async (identifier, password, loginMethod = 'email') => {
     try {
-      const payload = { password };
-      if (loginMethod === 'phone') {
-        payload.phone = identifier;
-      } else {
-        payload.email = identifier;
+      // Check stored users
+      const users = JSON.parse(localStorage.getItem('rjp_users') || '[]');
+      const found = users.find(u => 
+        loginMethod === 'phone' 
+          ? u.phone === identifier 
+          : u.email === identifier
+      );
+
+      if (!found) {
+        return { success: false, message: "No account found. Please register first." };
       }
-      const res = await axios.post(`${backendUrl}/auth/login`, payload);
-      setUser(res.data.user);
+      if (found.password !== password) {
+        return { success: false, message: "Incorrect password." };
+      }
+
+      const userData = { _id: found._id, name: found.name, email: found.email, role: found.role, phone: found.phone };
+      setUser(userData);
+      localStorage.setItem('rjp_user', JSON.stringify(userData));
       return { success: true };
     } catch (error) {
-      return { success: false, message: error.response?.data?.message || "Login failed" };
+      return { success: false, message: "Login failed" };
     }
   };
 
   /**
    * register
-   * Creates a new account and logs the user in.
+   * Creates a new account using localStorage (no backend).
    */
   const register = async (name, email, password, role, phone) => {
     try {
-      const payload = { name, email, password, role };
-      if (phone) payload.phone = phone;
-      const res = await axios.post(`${backendUrl}/auth/register`, payload);
-      setUser(res.data.user);
+      const users = JSON.parse(localStorage.getItem('rjp_users') || '[]');
+      
+      // Check if email already exists
+      if (users.find(u => u.email === email)) {
+        return { success: false, message: "An account with this email already exists." };
+      }
+
+      const newUser = {
+        _id: `user_${Date.now()}`,
+        name,
+        email,
+        password,
+        role: role || 'jobseeker',
+        phone: phone || ''
+      };
+
+      users.push(newUser);
+      localStorage.setItem('rjp_users', JSON.stringify(users));
+
+      const userData = { _id: newUser._id, name: newUser.name, email: newUser.email, role: newUser.role, phone: newUser.phone };
+      setUser(userData);
+      localStorage.setItem('rjp_user', JSON.stringify(userData));
       return { success: true };
     } catch (error) {
-      return { success: false, message: error.response?.data?.message || "Registration failed" };
+      return { success: false, message: "Registration failed" };
     }
   };
 
   /**
    * logout
-   * Clears the user state and tells the backend to clear the cookie.
+   * Clears the user state and localStorage.
    */
   const logout = async () => {
-    try {
-      await axios.get(`${backendUrl}/auth/logout`);
-      setUser(null);
-    } catch (error) {
-      console.error("Logout error", error);
-    }
+    setUser(null);
+    localStorage.removeItem('rjp_user');
   };
 
   // Provide the user data and functions to the rest of the app
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, backendUrl }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
-
