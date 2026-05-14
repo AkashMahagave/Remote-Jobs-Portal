@@ -156,25 +156,18 @@ const generateAllJobs = () => {
   const jobs = [];
   let id = 1;
 
-  const locTypes = [];
-  for (let i = 0; i < 30; i++) locTypes.push("bengaluru");
-  for (let i = 0; i < 40; i++) locTypes.push("india");
-  for (let i = 0; i < 30; i++) locTypes.push("worldwide");
-  // Shuffle
-  for (let i = locTypes.length - 1; i > 0; i--) {
-    const j = Math.floor(seededRandom() * (i + 1));
-    [locTypes[i], locTypes[j]] = [locTypes[j], locTypes[i]];
-  }
+  // Location types pool
+  const allLocTypes = ["bengaluru", "india", "worldwide"];
 
-  let locIdx = 0;
-
-  // General 80 jobs
-  for (const [category, count] of Object.entries(categoryCounts)) {
+  // Generate exactly the right number of jobs per category
+  // IT & Software: 20, Core Engineering: 20, all others: 10 each = 100 total
+  for (const [category, targetCount] of Object.entries(categoryCounts)) {
     const data = domainData[category];
-    for (let i = 0; i < count && jobs.length < 80; i++) {
-      const companyName = pick(data.companies);
-      const title = pick(data.titles);
-      const locType = locTypes[locIdx++ % locTypes.length];
+    
+    for (let i = 0; i < targetCount; i++) {
+      const companyName = data.companies[i % data.companies.length];
+      const title = data.titles[i % data.titles.length];
+      const locType = allLocTypes[Math.floor(seededRandom() * allLocTypes.length)];
       const location = pick(locations[locType]);
       const workMode = pick(workModes);
       const type = pick(jobTypes);
@@ -199,39 +192,6 @@ const generateAllJobs = () => {
         createdAt: getDateDaysAgo(daysAgo)
       });
     }
-  }
-
-  // 20 Premium jobs (recent, top companies)
-  const premiumCompanies = [
-    "Amazon", "Google", "Microsoft", "Infosys", "Wipro",
-    "Tesla", "Swiggy", "Zomato", "SAP", "Spotify",
-    "PayPal", "Uber", "Amazon", "Google", "Microsoft",
-    "Infosys", "Wipro", "Tesla", "Swiggy", "Zomato"
-  ];
-
-  for (const companyName of premiumCompanies) {
-    const info = companyData[companyName];
-    const category = info.category;
-    const data = domainData[category];
-    const title = pick(data.titles);
-    const location = pick(locations.india);
-    const daysAgo = Math.floor(seededRandom() * 3);
-
-    jobs.push({
-      _id: `job_${String(id++).padStart(3, '0')}`,
-      title,
-      description: generateDescription(companyName, title, category),
-      location,
-      workMode: pick(workModes),
-      type: pick(jobTypes),
-      salary: generateSalary(location),
-      experience: pick(experiences),
-      skills: data.skills.slice(0, 3),
-      category,
-      companyName,
-      companyLogo: getLogoUrl(companyName),
-      createdAt: getDateDaysAgo(daysAgo)
-    });
   }
 
   // Sort by date (newest first)
