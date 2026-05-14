@@ -39,8 +39,26 @@ const JobDetails = () => {
     setApplying(true);
     setError("");
     try {
-      // Simulate application submission (no backend)
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Save application to localStorage
+      const apps = JSON.parse(localStorage.getItem('rjp_applications') || '[]');
+      const newApp = {
+        _id: `app_${Date.now()}`,
+        job: {
+          _id: job._id,
+          title: job.title,
+          companyName: job.companyName,
+          companyLogo: job.companyLogo,
+          location: job.location,
+          salary: job.salary,
+          type: job.type
+        },
+        applicant: { _id: user._id, name: user.name, email: user.email },
+        resumeFile: resumeFile?.name || '',
+        status: 'Applied',
+        appliedAt: new Date().toISOString()
+      };
+      apps.push(newApp);
+      localStorage.setItem('rjp_applications', JSON.stringify(apps));
       setApplied(true);
     } catch (err) {
       setError("Failed to submit application.");

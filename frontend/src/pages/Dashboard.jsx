@@ -31,39 +31,59 @@ const Dashboard = () => {
   const fetchDashboardData = async () => {
     if (!user) return;
     setLoading(true);
-    // No backend - dashboard shows empty state for demo
-    setMyJobs([]);
-    setMyApplications([]);
+    // Load applications from localStorage
+    const allApps = JSON.parse(localStorage.getItem('rjp_applications') || '[]');
+    const userApps = allApps.filter(a => a.applicant?._id === user._id);
+    setMyApplications(userApps);
+    
+    // Load posted jobs from localStorage (for employers)
+    const postedJobs = JSON.parse(localStorage.getItem('rjp_posted_jobs') || '[]');
+    const userJobs = postedJobs.filter(j => j.postedBy === user._id);
+    setMyJobs(userJobs);
     setLoading(false);
   };
 
   const fetchJobApplicants = async (jobId) => {
-    setSelectedJobApps({ jobId, apps: [] });
+    const allApps = JSON.parse(localStorage.getItem('rjp_applications') || '[]');
+    const jobApps = allApps.filter(a => a.job?._id === jobId);
+    setSelectedJobApps({ jobId, apps: jobApps });
     setActiveTab("view-applicants");
   };
 
   const handlePostJob = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-    // Simulate posting (no backend)
-    await new Promise(r => setTimeout(r, 500));
-    alert("Demo mode: Job posting simulated successfully!");
+    // Save to localStorage
+    const postedJobs = JSON.parse(localStorage.getItem('rjp_posted_jobs') || '[]');
+    const job = {
+      _id: `posted_${Date.now()}`,
+      ...newJob,
+      postedBy: user._id,
+      createdAt: new Date().toISOString()
+    };
+    postedJobs.push(job);
+    localStorage.setItem('rjp_posted_jobs', JSON.stringify(postedJobs));
     setNewJob({
       title: "", companyName: "", location: "", salary: "",
       type: "Full-time", workMode: "Remote", category: "IT & Software",
       experience: "Fresher", description: "", skills: ""
     });
     setActiveTab("manage-jobs");
+    fetchDashboardData();
     setSubmitting(false);
   };
 
   const handleDeleteJob = async (id) => {
     if (!window.confirm("Are you sure?")) return;
+    const postedJobs = JSON.parse(localStorage.getItem('rjp_posted_jobs') || '[]');
+    localStorage.setItem('rjp_posted_jobs', JSON.stringify(postedJobs.filter(j => j._id !== id)));
     setMyJobs(myJobs.filter(j => j._id !== id));
   };
 
   const handleDeleteApplication = async (appId) => {
     if (!window.confirm("Are you sure you want to withdraw this application?")) return;
+    const allApps = JSON.parse(localStorage.getItem('rjp_applications') || '[]');
+    localStorage.setItem('rjp_applications', JSON.stringify(allApps.filter(a => a._id !== appId)));
     setMyApplications(myApplications.filter(a => a._id !== appId));
   };
 
