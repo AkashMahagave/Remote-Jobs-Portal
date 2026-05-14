@@ -35,12 +35,17 @@ export const AuthProvider = ({ children }) => {
   /**
    * login
    * Simulates login using localStorage (no backend).
-   * Supports login with either email or phone number.
    */
   const login = async (identifier, password, loginMethod = 'email') => {
     try {
-      // Check stored users
-      const users = JSON.parse(localStorage.getItem('rjp_users') || '[]');
+      let users = [];
+      try {
+        users = JSON.parse(localStorage.getItem('rjp_users') || '[]');
+        if (!Array.isArray(users)) users = [];
+      } catch (e) {
+        users = [];
+      }
+
       const found = users.find(u => 
         loginMethod === 'phone' 
           ? u.phone === identifier 
@@ -69,7 +74,13 @@ export const AuthProvider = ({ children }) => {
    */
   const register = async (name, email, password, role, phone) => {
     try {
-      const users = JSON.parse(localStorage.getItem('rjp_users') || '[]');
+      let users = [];
+      try {
+        users = JSON.parse(localStorage.getItem('rjp_users') || '[]');
+        if (!Array.isArray(users)) users = [];
+      } catch (e) {
+        users = [];
+      }
       
       // Check if email already exists
       if (users.find(u => u.email === email)) {

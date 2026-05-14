@@ -209,7 +209,7 @@ const generateAllCompanies = () => {
     location: "Global / Remote",
     logo: getLogoUrl(name),
     category: info.category
-  }));
+  })).sort((a, b) => a.name.localeCompare(b.name));
 };
 
 // Pre-generate data
